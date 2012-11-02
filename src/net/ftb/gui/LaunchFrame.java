@@ -136,7 +136,7 @@ public class LaunchFrame extends JFrame {
 	private LoginResponse RESPONSE;
 	public static boolean savepass = true;
 	public static String tempPass = "";
-        private static String sessionID = "";
+	private static String sessionID = "";
 
 	/**
 	 * Launch the application.
@@ -638,11 +638,11 @@ public class LaunchFrame extends JFrame {
 			String[] jarFiles = new String[] { "minecraft.jar", "lwjgl.jar", "lwjgl_util.jar","jinput.jar" };
 			URL[] urls = new URL[jarFiles.length];
 
-//			File f = new File(new File(workingDir).getParent(), "/instMods/" + jarFiles[0]);
-//			System.out.println(f.getPath());
-//			try {
-//				urls[0] = f.toURI().toURL();
-//			} catch (MalformedURLException e1) { e1.printStackTrace(); }
+			//			File f = new File(new File(workingDir).getParent(), "/instMods/" + jarFiles[0]);
+			//			System.out.println(f.getPath());
+			//			try {
+			//				urls[0] = f.toURI().toURL();
+			//			} catch (MalformedURLException e1) { e1.printStackTrace(); }
 
 			for (int i = 0; i < urls.length; i++) {
 				try {
@@ -669,7 +669,7 @@ public class LaunchFrame extends JFrame {
 			System.out.println(cl.toString());
 			// Get the Minecraft Class.
 			Class<?> mc = cl.loadClass("net.minecraft.client.Minecraft");
-//			Applet mcappl = (Applet) mc.newInstance();
+			//			Applet mcappl = (Applet) mc.newInstance();
 			Field[] fields = mc.getDeclaredFields();
 
 			for(Field field : fields) {
@@ -694,12 +694,12 @@ public class LaunchFrame extends JFrame {
 			String mcDir = mc.getMethod("a", String.class).invoke(null, (Object) "minecraft").toString();
 
 			System.out.println("MCDIR: " + mcDir);
-			
+
 			try {
 				Class<?> MCApplet = cl.loadClass("net.minecraft.client.MinecraftApplet");
 				Applet mcapplet = (Applet) MCApplet.newInstance();
 				MCFrame mcWindow = new MCFrame("Feed The Beast!");
-				mcWindow.start(mcapplet, username, sessionID, new Dimension(800,600), false);
+				mcWindow.start(mcapplet, username, sessionID, new Dimension(850,480), false);
 			} catch (InstantiationException e) {
 				mc.getMethod("main", String[].class).invoke(null, (Object) mcArgs);
 			}
@@ -723,9 +723,6 @@ public class LaunchFrame extends JFrame {
 			e.printStackTrace();
 			System.exit(4);
 		} 
-//		catch (InstantiationException e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	/**

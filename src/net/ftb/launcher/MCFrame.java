@@ -20,10 +20,10 @@ public class MCFrame extends Frame implements WindowListener {
 	public MCFrame(String title) {
 		super(title);
 		BufferedImage image = null;
-//		try {
-//			image = ImageIO.read(getClass().getResource("icon.png"));
-//			setIconImage(image);
-//		} catch (IOException e) { e.printStackTrace(); }
+		try {
+			image = ImageIO.read(getClass().getResource("/image/logo_ftb.png"));
+			setIconImage(image);
+		} catch (IOException e) { e.printStackTrace(); }
 		super.setVisible(true);
 
 		this.setSize(800, 600);
@@ -50,7 +50,7 @@ public class MCFrame extends Frame implements WindowListener {
 		if (maximize) {
 			this.setExtendedState(MAXIMIZED_BOTH);
 		}
-		
+
 		validate();
 		appletWrap.init();
 		appletWrap.start();

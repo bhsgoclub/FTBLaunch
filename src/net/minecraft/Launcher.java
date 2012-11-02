@@ -1,13 +1,13 @@
 package net.minecraft;
 
-import java.util.TreeMap;
-import java.util.Map;
-import java.net.URL;
-import java.awt.Dimension;
-import java.awt.BorderLayout;
-import java.awt.Graphics;
 import java.applet.Applet;
 import java.applet.AppletStub;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.net.URL;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class Launcher extends Applet implements AppletStub {
 	private Applet wrappedApplet;
@@ -114,7 +114,7 @@ public class Launcher extends Applet implements AppletStub {
 		super.setVisible(b);
 		wrappedApplet.setVisible(b);
 	}
-	
+
 	public void update(Graphics paramGraphics) { }
 	public void paint(Graphics paramGraphics) { }
 }
