@@ -686,7 +686,8 @@ public class LaunchFrame extends JFrame {
 				// And set it.
 				System.out.println("Fixed Minecraft Path: Field was " + field.toString());
 			}
-
+			System.setProperty("minecraft.applet.TargetDirectory", workingDir);
+			
 			String[] mcArgs = new String[2];
 			mcArgs[0] = username;
 			mcArgs[1] = password;
