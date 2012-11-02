@@ -1,8 +1,10 @@
 package net.ftb.gui;
 
+import java.applet.Applet;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -71,6 +73,7 @@ import net.ftb.gui.panes.ModpacksPane;
 import net.ftb.gui.panes.NewsPane;
 import net.ftb.gui.panes.OptionsPane;
 import net.ftb.gui.panes.TexturepackPane;
+import net.ftb.launcher.MCFrame;
 import net.ftb.util.FileUtils;
 import net.ftb.workers.GameUpdateWorker;
 import net.ftb.workers.LoginWorker;
@@ -133,6 +136,7 @@ public class LaunchFrame extends JFrame {
 	private LoginResponse RESPONSE;
 	public static boolean savepass = true;
 	public static String tempPass = "";
+        private static String sessionID = "";
 
 	/**
 	 * Launch the application.
@@ -304,8 +308,9 @@ public class LaunchFrame extends JFrame {
 		savePassword.setToolTipText("Save Password");
 		savePassword.setBounds(701, 20, 16, 30);
 
-		savePassword.setSelected(!Settings.getSettings().getLastUser().isEmpty() && !userManager.getPassword(Settings.getSettings().getLastUser()).isEmpty());
-		savepass = savePassword.isSelected();
+		if(Settings.getSettings().getLastUser() != null) {
+			savePassword.setSelected(!userManager.getPassword(Settings.getSettings().getLastUser()).isEmpty());
+		}
 
 		footer.add(edit);
 		footer.add(users);
@@ -428,6 +433,7 @@ public class LaunchFrame extends JFrame {
 				String responseStr;
 				try {
 					responseStr = get();
+					sessionID = responseStr.split(":")[3];
 				} catch (InterruptedException err) {
 					err.printStackTrace();
 					return;
@@ -629,8 +635,14 @@ public class LaunchFrame extends JFrame {
 	protected void launchMinecraft(String workingDir, String username, String password) {
 		try {
 			System.out.println("Loading jars...");
-			String[] jarFiles = new String[] { FORGENAME,"minecraft.jar", "lwjgl.jar", "lwjgl_util.jar","jinput.jar" };
+			String[] jarFiles = new String[] { "minecraft.jar", "lwjgl.jar", "lwjgl_util.jar","jinput.jar" };
 			URL[] urls = new URL[jarFiles.length];
+
+//			File f = new File(new File(workingDir).getParent(), "/instMods/" + jarFiles[0]);
+//			System.out.println(f.getPath());
+//			try {
+//				urls[0] = f.toURI().toURL();
+//			} catch (MalformedURLException e1) { e1.printStackTrace(); }
 
 			for (int i = 0; i < urls.length; i++) {
 				try {
@@ -646,30 +658,33 @@ public class LaunchFrame extends JFrame {
 			System.out.println("Loading natives...");
 			String nativesDir = new File(new File(workingDir, "bin"), "natives").toString();
 
+			System.out.println(workingDir);
+
 			System.setProperty("org.lwjgl.librarypath", nativesDir);
 			System.setProperty("net.java.games.input.librarypath", nativesDir);
 
 			System.setProperty("user.home", new File(workingDir).getParent());
 
 			cl = new URLClassLoader(urls, LaunchFrame.class.getClassLoader());
-
+			System.out.println(cl.toString());
 			// Get the Minecraft Class.
 			Class<?> mc = cl.loadClass("net.minecraft.client.Minecraft");
+//			Applet mcappl = (Applet) mc.newInstance();
 			Field[] fields = mc.getDeclaredFields();
 
-			for(Field f : fields) {
-				if(f.getType() != File.class) {
+			for(Field field : fields) {
+				if(field.getType() != File.class) {
 					// Has to be File
 					continue;
 				}
-				if(0 == (f.getModifiers() & (Modifier.PRIVATE | Modifier.STATIC))){
+				if(0 == (field.getModifiers() & (Modifier.PRIVATE | Modifier.STATIC))){
 					// And Private Static.
 					continue;
 				}
-				f.setAccessible(true);
-				f.set(null, new File(workingDir));
+				field.setAccessible(true);
+				field.set(null, new File(workingDir));
 				// And set it.
-				System.out.println("Fixed Minecraft Path: Field was " + f.toString());
+				System.out.println("Fixed Minecraft Path: Field was " + field.toString());
 			}
 
 			String[] mcArgs = new String[2];
@@ -679,8 +694,15 @@ public class LaunchFrame extends JFrame {
 			String mcDir = mc.getMethod("a", String.class).invoke(null, (Object) "minecraft").toString();
 
 			System.out.println("MCDIR: " + mcDir);
-
-			mc.getMethod("main", String[].class).invoke(null, (Object) mcArgs);
+			
+			try {
+				Class<?> MCApplet = cl.loadClass("net.minecraft.client.MinecraftApplet");
+				Applet mcapplet = (Applet) MCApplet.newInstance();
+				MCFrame mcWindow = new MCFrame("Feed The Beast!");
+				mcWindow.start(mcapplet, username, sessionID, new Dimension(800,600), false);
+			} catch (InstantiationException e) {
+				mc.getMethod("main", String[].class).invoke(null, (Object) mcArgs);
+			}
 			this.setVisible(false);
 		} catch (ClassNotFoundException e) {
 			this.setVisible(true);
@@ -700,7 +722,10 @@ public class LaunchFrame extends JFrame {
 		} catch (SecurityException e) {
 			e.printStackTrace();
 			System.exit(4);
-		}
+		} 
+//		catch (InstantiationException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	/**
@@ -743,13 +768,11 @@ public class LaunchFrame extends JFrame {
 		System.out.println("dirs mk'd");
 		FileUtils.copyFolder(new File(Settings.getSettings().getInstallPath()+ "/.minecraft/bin/"), new File(Settings.getSettings().getInstallPath() + "/" 
 				+ ModPack.getPack(modPacksPane.getSelectedModIndex()).getDir()+ "/.minecraft/bin"));
-		File minecraft = new File(Settings.getSettings().getInstallPath()+ "/.minecraft/bin/minecraft.jar");
-		File mcbackup = new File(Settings.getSettings().getInstallPath() + "/"+ modPackName + "/.minecraft/bin/mcbackup.jar");
-		FileUtils.copyFile(minecraft, mcbackup);
 		FileUtils.copyFolder(new File(Settings.getSettings().getInstallPath() + "/temp/" + ModPack.getPack(modPacksPane.getSelectedModIndex()).getDir() + "/.minecraft"), 
 				new File(Settings.getSettings().getInstallPath() + "/" + ModPack.getPack(modPacksPane.getSelectedModIndex()).getDir() + "/.minecraft"));
+		new File(Settings.getSettings().getInstallPath() + "/" + ModPack.getPack(modPacksPane.getSelectedModIndex()).getDir() + "/instMods/").mkdirs();
 		FileUtils.copyFile(new File(Settings.getSettings().getInstallPath() + "/temp/" + ModPack.getPack(modPacksPane.getSelectedModIndex()).getDir() + "/instMods/" + FORGENAME), 
-				new File(Settings.getSettings().getInstallPath() + "/" + ModPack.getPack(modPacksPane.getSelectedModIndex()).getDir() + "/.minecraft/bin/" + FORGENAME));
+				new File(Settings.getSettings().getInstallPath() + "/" + ModPack.getPack(modPacksPane.getSelectedModIndex()).getDir() + "/instMods/" + FORGENAME));
 	}
 
 	/**
